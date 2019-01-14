@@ -1,9 +1,14 @@
-//import { GraphQLClient } from 'graphql-request';
 const fs = require('fs');
 const fetch = require("node-fetch");
 const { GraphQLClient } = require('graphql-request');
 
-const standingsQuery = `
+const Mode = Object.freeze({
+  NAMES_ONLY: Symbol('NAMES_ONLY'),
+  TWITTER_OR_NAME: Symbol('TWITTER_OR_NAME'),
+  NAME_AND_TWITTER: Symbol('NAME_AND_TWITTER'),
+})
+
+const STANDINGS_QUERY = `
 query StandingsQuery($slug: String) {
   tournament(slug: $slug){
     name
@@ -23,8 +28,9 @@ query StandingsQuery($slug: String) {
           entrant{
             name
             participants {
-              playerId
-              connectedAccounts
+              player {
+                twitterHandle
+              }
             }
           }
         }
@@ -34,45 +40,57 @@ query StandingsQuery($slug: String) {
 }
 `;
 
-const TOKEN = fs.readFileSync('SMASHGG_TOKEN', 'utf8').trim();
 const ENDPOINT = 'https://api.smash.gg/gql/alpha';
-const NUM_PLACINGS = 3;
-
-const slug = process.argv[2];
+const TOKEN = fs.readFileSync('SMASHGG_TOKEN', 'utf8').trim();
+const SLUG = process.argv[2];
 
 async function main() {
   const graphQLClient = new GraphQLClient(ENDPOINT, {
     headers: { authorization: `Bearer ${TOKEN}` },
   });
+  const tournamentData = await graphQLClient.request(STANDINGS_QUERY, {
+    slug: SLUG
+  });
 
-  const tournamentData = await graphQLClient.request(standingsQuery, { slug });
   const t = tournamentData.tournament;
   const messages = [];
   for (const e of t.events) {
-    const intro = `Congratulations to our ${e.name} top ${NUM_PLACINGS} at ${t.name}!`;
-    let placings = e.standings.nodes.slice(0, NUM_PLACINGS)
-      .map(async s => {
-        const id = s.entrant.participants[0].playerId;
-        const name = s.entrant.name;
-        const twitter = await getTwitterHandle(id);
-        const placing = ordinal(s.standing);
-        return `${placing}: ${name}${twitter ? ` (@${twitter})` : ''}`;
-      });
-    placings = await Promise.all(placings);
-    messages.push(`${intro}
+    const numPlacings = e.numEntrants > 16 ? 8 : 3;
+    // TODO(Adrian): Try different modes until it fits in a tweet
+    const mode = numPlacings > 4 ? Mode.TWITTER_OR_NAME : Mode.NAME_AND_TWITTER;
+    const intro = `Congratulations to our ${e.name} top ${numPlacings} at ${t.name}!`;
+    let placings = e.standings.nodes
+      .slice(0, numPlacings)
+      .map(placingString.bind(this, mode));
+    messages.push(`\
+${intro}
 
 ${placings.join('\n')}
 
 https://smash.gg/${e.slug.replace('/event/', '/events/')}/standings`);
   }
+
   console.log(messages.join('\n---------\n'));
 }
 
-async function getTwitterHandle(playerId) {
-  const resp = await fetch(`https://api.smash.gg/player/${playerId}`);
-  const json = await resp.json();
-  console.log
-  return json.entities.player.twitterHandle;
+function placingString(nameMode, standing) {
+  const name = standing.entrant.name;
+  const twitter = standing.entrant.participants[0].player.twitterHandle;
+  const placing = ordinal(standing.standing);
+
+  let nameString;
+  switch (nameMode) {
+    case Mode.NAMES_ONLY:
+      nameString = name;
+      break;
+    case Mode.TWITTER_OR_NAME:
+      nameString = twitter ? `@${twitter}` : name;
+      break;
+    case Mode.NAME_AND_TWITTER:
+      nameString = `${name}${twitter ? ` (@${twitter})` : ''}`;
+      break;
+  }
+  return `${placing}: ${nameString}`;
 }
 
 function ordinal(i) {
