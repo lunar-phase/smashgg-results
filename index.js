@@ -58,7 +58,7 @@ async function main() {
     const numPlacings = e.numEntrants > 16 ? 8 : 3;
     // TODO(Adrian): Try different modes until it fits in a tweet
     const mode = numPlacings > 4 ? Mode.TWITTER_OR_NAME : Mode.NAME_AND_TWITTER;
-    const intro = `Congratulations to our ${e.name} top ${numPlacings} at ${t.name}!`;
+    const intro = `${t.name} - ${e.name} top ${numPlacings}/${e.numEntrants}`;
     let placings = e.standings.nodes
       .slice(0, numPlacings)
       .map(placingString.bind(this, mode));
@@ -67,7 +67,7 @@ ${intro}
 
 ${placings.join('\n')}
 
-https://smash.gg/${e.slug.replace('/event/', '/events/')}/standings`);
+Full standings: https://smash.gg/${e.slug.replace('/event/', '/events/')}/standings`);
   }
 
   console.log(messages.join('\n---------\n'));
