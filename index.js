@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const fs = require('fs');
 const fetch = require("node-fetch");
 const { GraphQLClient } = require('graphql-request');
