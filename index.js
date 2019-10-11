@@ -76,7 +76,11 @@ Full standings: https://smash.gg/${e.slug.replace('/event/', '/events/')}/standi
 
 function placingString(nameMode, standing) {
   const name = standing.entrant.name;
-  const twitter = standing.entrant.participants[0].player.twitterHandle;
+  const twitter = standing.entrant.participants
+    .map(p => p.player.twitterHandle)
+    .filter(t => !!t)
+    .map(t => '@' + t)
+    .join(', ');
   const placing = ordinal(standing.standing);
 
   let nameString;
@@ -85,10 +89,10 @@ function placingString(nameMode, standing) {
       nameString = name;
       break;
     case Mode.TWITTER_OR_NAME:
-      nameString = twitter ? `@${twitter}` : name;
+      nameString = twitter ? `${twitter}` : name;
       break;
     case Mode.NAME_AND_TWITTER:
-      nameString = `${name}${twitter ? ` (@${twitter})` : ''}`;
+      nameString = `${name}${twitter ? ` (${twitter})` : ''}`;
       break;
   }
   return `${placing}: ${nameString}`;
