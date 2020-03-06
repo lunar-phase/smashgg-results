@@ -29,8 +29,10 @@ query StandingsQuery($slug: String) {
           entrant{
             name
             participants {
-              player {
-                twitterHandle
+              user {
+                authorizations(types: [TWITTER]) {
+                  externalUsername
+                }
               }
             }
           }
@@ -77,8 +79,11 @@ Full standings: https://smash.gg/${e.slug.replace('/event/', '/events/')}/standi
 function placingString(nameMode, standing) {
   const name = standing.entrant.name;
   const twitter = standing.entrant.participants
-    .map(p => p.player.twitterHandle)
-    .filter(t => !!t)
+    .map(p => p.user)
+    .filter(t => t != null)
+    .map(user => user.authorizations)
+    .filter(t => t != null)
+    .map(authorizations => authorizations[0].externalUsername)
     .map(t => '@' + t)
     .join(', ');
   const placing = ordinal(standing.standing);
