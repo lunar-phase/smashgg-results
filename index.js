@@ -83,6 +83,7 @@ function placingString(nameMode, standing) {
     .filter(t => t != null)
     .map(user => user.authorizations)
     .filter(t => t != null)
+    .filter(authorizations => authorizations[0] != null)
     .map(authorizations => authorizations[0].externalUsername)
     .map(t => '@' + t)
     .join(', ');
