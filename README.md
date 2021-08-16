@@ -69,4 +69,7 @@ Full Moon 9 - Under Night In-Birth Exe Late(st) top 8/47
 
 Full standings: https://smash.gg/tournament/full-moon-9/events/under-night-in-birth-exe-late-st/standings
 ```
+
+`npm run start -- full-moon-9` will do the same.
+
 Be sure to yell at all the players that still haven't linked their Twitter accounts to smash.gg!
