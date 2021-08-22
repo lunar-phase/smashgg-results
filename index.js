@@ -81,9 +81,9 @@ function placingString(nameMode, standing) {
   const twitter = standing.entrant.participants
     .map(p => p.user)
     .filter(t => t != null)
-    .map(user => user.authorizations)
+    .map(user => user.authorizations && user.authorizations[0])
     .filter(t => t != null)
-    .map(authorizations => authorizations[0].externalUsername)
+    .map(authorization => authorization.externalUsername)
     .map(t => '@' + t)
     .join(', ');
   const placing = ordinal(standing.standing);
