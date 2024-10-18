@@ -4,7 +4,7 @@
   "description": "Generates a results summary for the given smashgg tournament slug",
   "bin": "./index.js",
   "dependencies": {
-    "graphql-request": "^1.8.2",
+    "graphql-request": "^3.7.0",
     "node-fetch": "^2.3.0"
   }
 }
